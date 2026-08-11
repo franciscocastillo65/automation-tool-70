@@ -1,22 +1,27 @@
 import logging
-import os
-from logging.handlers import RotatingFileHandler
 
-def setup_logger(name, log_file, level=logging.INFO):
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+# Configure the logger
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-    # Ensure the directory exists
-    if not os.path.exists(os.path.dirname(log_file)):
-        os.makedirs(os.path.dirname(log_file))
+logger = logging.getLogger(__name__)
 
-    handler = RotatingFileHandler(log_file, maxBytes=5*1024*1024, backupCount=3)
-    handler.setFormatter(formatter)
-    logger = logging.getLogger(name)
-    logger.setLevel(level)
-    logger.addHandler(handler)
-    return logger
+class NetworkOperation:
+    def __init__(self, max_retries=3):
+        self.max_retries = max_retries
 
-# Example usage
-if __name__ == '__main__':
-    my_logger = setup_logger('my_logger', 'logs/my_log.log')
-    my_logger.info('Logger setup complete')
+    def perform_operation(self, operation):
+        attempts = 0
+        while attempts < self.max_retries:
+            try:
+                logger.info(f'Attempt {attempts + 1} of {self.max_retries}')
+                result = operation()
+                logger.info('Operation succeeded')
+                return result
+            except Exception as e:
+                attempts += 1
+                logger.error(f'Error occurred: {e}')
+                if attempts < self.max_retries:
+                    logger.info('Retrying...')
+                else:
+                    logger.error('Max retries reached, operation failed')
+                    raise
