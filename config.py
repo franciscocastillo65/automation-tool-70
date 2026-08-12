@@ -1,24 +1,31 @@
-import os
-import logging
-from logging.handlers import RotatingFileHandler
+import json
 
-LOG_FILE = 'autoclicker.log'
-LOG_LEVEL = logging.DEBUG
-MAX_BYTES = 2 * 1024 * 1024  # 2 MB
-BACKUP_COUNT = 5
+class Config:
+    def __init__(self, filename='config.json'):
+        self.filename = filename
+        self.settings = self.load_settings()
 
+    def load_settings(self):
+        try:
+            with open(self.filename, 'r') as file:
+                return json.load(file)
+        except (FileNotFoundError, json.JSONDecodeError):
+            return self.default_settings()
 
-def setup_logger():
-    logger = logging.getLogger(__name__)
-    logger.setLevel(LOG_LEVEL)
+    def default_settings(self):
+        return {
+            'click_interval': 0.1,
+            'max_clicks': 100,
+            'enabled': True
+        }
 
-    if not logger.handlers:
-        handler = RotatingFileHandler(LOG_FILE, maxBytes=MAX_BYTES, backupCount=BACKUP_COUNT)
-        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
+    def save_settings(self):
+        with open(self.filename, 'w') as file:
+            json.dump(self.settings, file, indent=4)
 
-    return logger
-
-logger = setup_logger()
-logger.info('Logger is set up with rotation')
+    def update_setting(self, key, value):
+        if key in self.settings:
+            self.settings[key] = value
+            self.save_settings()
+        else:
+            raise KeyError(f'Invalid setting: {key}')
