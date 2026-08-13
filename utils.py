@@ -1,48 +1,32 @@
-import os
-import json
-import logging
+import random
+import time
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+class AutoClicker:
+    def __init__(self, interval: float = 0.1):
+        self.interval = interval
+        self.running = False
 
-def load_json(file_path):
-    if not os.path.exists(file_path):
-        logger.error(f'File not found: {file_path}')
-        return None
-    with open(file_path, 'r') as file:
-        try:
-            data = json.load(file)
-            logger.info(f'Successfully loaded JSON data from {file_path}')
-            return data
-        except json.JSONDecodeError:
-            logger.error('Failed to decode JSON')
-            return None
+    def start(self):
+        self.running = True
+        print("AutoClicker started.")
+        self._click_loop()
 
+    def stop(self):
+        self.running = False
+        print("AutoClicker stopped.")
 
-def save_json(data, file_path):
-    directory = os.path.dirname(file_path)
-    if directory and not os.path.exists(directory):
-        os.makedirs(directory)
-    with open(file_path, 'w') as file:
-        json.dump(data, file, indent=4)
-        logger.info(f'Successfully saved data to {file_path}')
+    def _click_loop(self):
+        while self.running:
+            self._perform_click()
+            time.sleep(self.interval)
 
+    @staticmethod
+    def _perform_click():
+        x, y = random.randint(0, 1920), random.randint(0, 1080)
+        print(f"Clicking at ({x}, {y})")  # Simulate clicking
 
-def list_files_in_directory(dir_path):
-    try:
-        return [f for f in os.listdir(dir_path) if os.path.isfile(os.path.join(dir_path, f))]
-    except Exception as e:
-        logger.error(f'Error listing files in directory: {e}')
-        return []
-
-
-def get_file_extension(file_path):
-    _, ext = os.path.splitext(file_path)
-    return ext.lstrip('.')
-
-
-def truncate_string(string, max_length):
-    if len(string) > max_length:
-        logger.warning('String truncated from {len(string)} to {max_length}')
-        return string[:max_length] + '...'
-    return string
+if __name__ == '__main__':
+    clicker = AutoClicker(interval=0.5)
+    clicker.start()
+    time.sleep(2)  # Let it click for 2 seconds
+    clicker.stop()
