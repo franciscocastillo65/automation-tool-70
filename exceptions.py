@@ -1,30 +1,25 @@
-class InputValidationError(Exception):
-    def __init__(self, message):
-        self.message = message
-        super().__init__(self.message)
+class AutoClickerError(Exception):
+    """Base class for exceptions in the AutoClicker tool."""
+    pass
 
+class ClickError(AutoClickerError):
+    """Exception raised for errors related to clicking actions."""
+    def __init__(self, message: str) -> None:
+        super().__init__(message)
 
-def validate_input(data):
-    if not isinstance(data, dict):
-        raise InputValidationError('Input must be a dictionary')
-    if 'name' not in data or not isinstance(data['name'], str):
-        raise InputValidationError('Missing or invalid name')
-    if 'age' not in data or not isinstance(data['age'], int) or data['age'] <= 0:
-        raise InputValidationError('Missing or invalid age')
+class ConfigurationError(AutoClickerError):
+    """Exception raised for configuration-related errors."""
+    def __init__(self, message: str) -> None:
+        super().__init__(message)
 
+class InvalidActionError(AutoClickerError):
+    """Exception raised when an invalid action is performed."""
+    def __init__(self, action: str) -> None:
+        message = f"Invalid action attempted: {action}"
+        super().__init__(message)
 
-def process_data(data):
-    try:
-        validate_input(data)
-        print('Processing:', data)
-    except InputValidationError as e:
-        print('Input validation error:', e.message)
-
-
-if __name__ == '__main__':
-    sample_data = {'name': 'Alice', 'age': 30}
-    process_data(sample_data)
-    invalid_data = {'name': 'Bob', 'age': -5}
-    process_data(invalid_data)
-    wrong_type_data = ['not', 'a', 'dict']
-    process_data(wrong_type_data)
+class ResourceNotFoundError(AutoClickerError):
+    """Exception raised when a required resource is not found."""
+    def __init__(self, resource: str) -> None:
+        message = f"Resource not found: {resource}"
+        super().__init__(message)
