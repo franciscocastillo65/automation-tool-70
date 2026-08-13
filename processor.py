@@ -1,38 +1,38 @@
-import json
-import logging
+import time
+import threading
+from collections import deque
 
-logger = logging.getLogger(__name__)
+class ClickProcessor:
+    def __init__(self):
+        self.click_queue = deque()  
+        self.is_running = False
 
-class DataProcessor:
-    def __init__(self, data):
-        self.data = data
+    def add_click(self, x, y):
+        self.click_queue.append((x, y))
 
-    def clean(self):
-        logger.debug("Starting data cleaning")
-        self.data = [item for item in self.data if self.is_valid(item)]
-        logger.debug("Data cleaning completed")
+    def process_clicks(self):
+        while self.is_running:
+            if self.click_queue:
+                x, y = self.click_queue.popleft()
+                self.perform_click(x, y)
+            time.sleep(0.01)  
 
-    def is_valid(self, item):
-        return isinstance(item, dict) and 'value' in item
+    def perform_click(self, x, y):
+        # Logic to simulate a mouse click at (x, y)
+        print(f"Clicking at ({x}, {y})")  
 
-    def process(self):
-        logger.debug("Processing data")
-        processed_data = [self.transform(item) for item in self.data]
-        logger.info("Data processing completed")
-        return processed_data
+    def start(self):
+        self.is_running = True
+        threading.Thread(target=self.process_clicks, daemon=True).start()
 
-    def transform(self, item):
-        logger.debug(f"Transforming item: {item}")
-        return json.dumps(item)
+    def stop(self):
+        self.is_running = False
 
+# Example usage:
 if __name__ == '__main__':
-    sample_data = [
-        {'value': 1},
-        {'value': 2},
-        {'wrong_key': 3},
-        {'value': 4},
-    ]
-    processor = DataProcessor(sample_data)
-    processor.clean()
-    result = processor.process()
-    print(result)
+    processor = ClickProcessor()
+    processor.start()
+    processor.add_click(100, 200)
+    processor.add_click(150, 250)
+    time.sleep(1)
+    processor.stop()
