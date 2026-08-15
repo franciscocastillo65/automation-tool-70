@@ -1,17 +1,40 @@
 import logging
-from logging.handlers import RotatingFileHandler
 
-def setup_logger(log_file, max_bytes=5 * 1024 * 1024, backup_count=3):
-    logger = logging.getLogger(__name__)
-    logger.setLevel(logging.DEBUG)
-    handler = RotatingFileHandler(log_file, maxBytes=max_bytes, backupCount=backup_count)
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
-    return logger
+class CustomLogger:
+    def __init__(self, name):
+        self.logger = logging.getLogger(name)
+        self.set_logger()
 
-if __name__ == '__main__':
-    logger = setup_logger('app.log')
-    logger.info('Logger is set up with rotation')
-    logger.debug('This is a debug message')
-    logger.error('This is an error message')
+    def set_logger(self):
+        handler = logging.StreamHandler()
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        handler.setFormatter(formatter)
+        self.logger.addHandler(handler)
+        self.logger.setLevel(logging.INFO)
+
+    def log_info(self, message):
+        self.logger.info(message)
+
+    def log_error(self, message):
+        self.logger.error(message)
+
+retry_attempts = 3
+retry_delay = 2
+
+def retry_on_failure(func):
+    def wrapper(*args, **kwargs):
+        for attempt in range(retry_attempts):
+            try:
+                return func(*args, **kwargs)
+            except Exception as e:
+                logger = CustomLogger('RetryLogger')
+                logger.log_error(f'Attempt {attempt + 1} failed: {str(e)}')
+                if attempt < retry_attempts - 1:
+                    time.sleep(retry_delay)
+        raise Exception('Max retry attempts exceeded')
+    return wrapper
+
+@retry_on_failure
+def network_operation():
+    # Simulate a network operation that may fail
+    pass
