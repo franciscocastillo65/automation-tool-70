@@ -1,32 +1,30 @@
-import random
-import time
+import json
 
-class AutoClicker:
-    def __init__(self, interval: float = 0.1):
-        self.interval = interval
-        self.running = False
+class ClickData:
+    def __init__(self, x: int, y: int, delay: float):
+        self.x = x
+        self.y = y
+        self.delay = delay
 
-    def start(self):
-        self.running = True
-        print("AutoClicker started.")
-        self._click_loop()
-
-    def stop(self):
-        self.running = False
-        print("AutoClicker stopped.")
-
-    def _click_loop(self):
-        while self.running:
-            self._perform_click()
-            time.sleep(self.interval)
+    def to_dict(self):
+        return {'x': self.x, 'y': self.y, 'delay': self.delay}
 
     @staticmethod
-    def _perform_click():
-        x, y = random.randint(0, 1920), random.randint(0, 1080)
-        print(f"Clicking at ({x}, {y})")  # Simulate clicking
+    def from_dict(data: dict) -> 'ClickData':
+        return ClickData(x=data['x'], y=data['y'], delay=data['delay'])
+
+def save_click_data(clicks: list, filename: str):
+    with open(filename, 'w') as file:
+        json_data = json.dumps([click.to_dict() for click in clicks], indent=4)
+        file.write(json_data)
+
+def load_click_data(filename: str) -> list:
+    with open(filename, 'r') as file:
+        data = json.load(file)
+        return [ClickData.from_dict(item) for item in data]
 
 if __name__ == '__main__':
-    clicker = AutoClicker(interval=0.5)
-    clicker.start()
-    time.sleep(2)  # Let it click for 2 seconds
-    clicker.stop()
+    sample_clicks = [ClickData(100, 200, 0.5), ClickData(300, 400, 1.0)]
+    save_click_data(sample_clicks, 'clicks.json')
+    loaded_clicks = load_click_data('clicks.json')
+    print(loaded_clicks)
