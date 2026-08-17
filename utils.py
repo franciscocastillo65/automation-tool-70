@@ -1,30 +1,29 @@
 import json
+from typing import Any, Dict
 
-class ClickData:
-    def __init__(self, x: int, y: int, delay: float):
-        self.x = x
-        self.y = y
-        self.delay = delay
+class AutoClickerData:
+    def __init__(self, clicks: int = 0, interval: float = 0.1, active: bool = False) -> None:
+        self.clicks = clicks
+        self.interval = interval
+        self.active = active
 
-    def to_dict(self):
-        return {'x': self.x, 'y': self.y, 'delay': self.delay}
+    def to_json(self) -> str:
+        return json.dumps(self.__dict__)
 
-    @staticmethod
-    def from_dict(data: dict) -> 'ClickData':
-        return ClickData(x=data['x'], y=data['y'], delay=data['delay'])
+    @classmethod
+    def from_json(cls, json_data: str) -> 'AutoClickerData':
+        data = json.loads(json_data)
+        return cls(**data)
 
-def save_click_data(clicks: list, filename: str):
-    with open(filename, 'w') as file:
-        json_data = json.dumps([click.to_dict() for click in clicks], indent=4)
-        file.write(json_data)
+    def update_clicks(self, count: int) -> None:
+        self.clicks += count
 
-def load_click_data(filename: str) -> list:
-    with open(filename, 'r') as file:
-        data = json.load(file)
-        return [ClickData.from_dict(item) for item in data]
+    def toggle_active(self) -> None:
+        self.active = not self.active
 
-if __name__ == '__main__':
-    sample_clicks = [ClickData(100, 200, 0.5), ClickData(300, 400, 1.0)]
-    save_click_data(sample_clicks, 'clicks.json')
-    loaded_clicks = load_click_data('clicks.json')
-    print(loaded_clicks)
+    def set_interval(self, new_interval: float) -> None:
+        if new_interval > 0:
+            self.interval = new_interval
+        else:
+            raise ValueError("Interval must be positive")
+
