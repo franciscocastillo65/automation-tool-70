@@ -1,40 +1,32 @@
 import logging
 
-class CustomLogger:
-    def __init__(self, name):
-        self.logger = logging.getLogger(name)
-        self.set_logger()
+class Logger:
+    """Custom Logger class for handling logs in the application."""
+    
+    def __init__(self, name: str, level: int = logging.INFO) -> None:
+        """Initializes the Logger with a name and log level."""
+        self.logger: logging.Logger = logging.getLogger(name)
+        self.logger.setLevel(level)
+        self.handler: logging.StreamHandler = logging.StreamHandler()
+        self.handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+        self.logger.addHandler(self.handler)
 
-    def set_logger(self):
-        handler = logging.StreamHandler()
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        handler.setFormatter(formatter)
-        self.logger.addHandler(handler)
-        self.logger.setLevel(logging.INFO)
-
-    def log_info(self, message):
+    def info(self, message: str) -> None:
+        """Logs an informational message."""
         self.logger.info(message)
 
-    def log_error(self, message):
+    def warning(self, message: str) -> None:
+        """Logs a warning message."""
+        self.logger.warning(message)
+
+    def error(self, message: str) -> None:
+        """Logs an error message."""
         self.logger.error(message)
 
-retry_attempts = 3
-retry_delay = 2
+    def critical(self, message: str) -> None:
+        """Logs a critical message."""
+        self.logger.critical(message)
 
-def retry_on_failure(func):
-    def wrapper(*args, **kwargs):
-        for attempt in range(retry_attempts):
-            try:
-                return func(*args, **kwargs)
-            except Exception as e:
-                logger = CustomLogger('RetryLogger')
-                logger.log_error(f'Attempt {attempt + 1} failed: {str(e)}')
-                if attempt < retry_attempts - 1:
-                    time.sleep(retry_delay)
-        raise Exception('Max retry attempts exceeded')
-    return wrapper
-
-@retry_on_failure
-def network_operation():
-    # Simulate a network operation that may fail
-    pass
+    def set_level(self, level: int) -> None:
+        """Sets the logging level for the Logger."""
+        self.logger.setLevel(level)
