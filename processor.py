@@ -1,38 +1,35 @@
-import time
-import threading
-from collections import deque
+from typing import List
 
 class ClickProcessor:
-    def __init__(self):
-        self.click_queue = deque()  
-        self.is_running = False
+    """
+    A class to process click events for automation.
+    """
+    def __init__(self, interval: float, click_count: int) -> None:
+        """
+        Initializes the ClickProcessor with an interval and click count.
+        
+        :param interval: Time interval between clicks in seconds.
+        :param click_count: Number of clicks to perform.
+        """
+        self.interval = interval
+        self.click_count = click_count
 
-    def add_click(self, x, y):
-        self.click_queue.append((x, y))
+    def perform_clicks(self) -> None:
+        """
+        Simulates the click actions based on the parameters set during initialization.
+        """
+        import time
+        for _ in range(self.click_count):
+            self.click()
+            time.sleep(self.interval)
 
-    def process_clicks(self):
-        while self.is_running:
-            if self.click_queue:
-                x, y = self.click_queue.popleft()
-                self.perform_click(x, y)
-            time.sleep(0.01)  
+    @staticmethod
+    def click() -> None:
+        """
+        Simulates a single click action.
+        """
+        print("Click!")
 
-    def perform_click(self, x, y):
-        # Logic to simulate a mouse click at (x, y)
-        print(f"Clicking at ({x}, {y})")  
-
-    def start(self):
-        self.is_running = True
-        threading.Thread(target=self.process_clicks, daemon=True).start()
-
-    def stop(self):
-        self.is_running = False
-
-# Example usage:
 if __name__ == '__main__':
-    processor = ClickProcessor()
-    processor.start()
-    processor.add_click(100, 200)
-    processor.add_click(150, 250)
-    time.sleep(1)
-    processor.stop()
+    click_processor = ClickProcessor(0.5, 10)
+    click_processor.perform_clicks()
