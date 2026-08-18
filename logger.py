@@ -1,32 +1,19 @@
 import logging
+from logging.handlers import RotatingFileHandler
 
-class Logger:
-    """Custom Logger class for handling logs in the application."""
-    
-    def __init__(self, name: str, level: int = logging.INFO) -> None:
-        """Initializes the Logger with a name and log level."""
-        self.logger: logging.Logger = logging.getLogger(name)
-        self.logger.setLevel(level)
-        self.handler: logging.StreamHandler = logging.StreamHandler()
-        self.handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-        self.logger.addHandler(self.handler)
+def setup_logger(log_file='app.log', max_bytes=5*1024*1024, backup_count=3):
+    logger = logging.getLogger('AutoClickerLogger')
+    logger.setLevel(logging.DEBUG)
 
-    def info(self, message: str) -> None:
-        """Logs an informational message."""
-        self.logger.info(message)
+    handler = RotatingFileHandler(log_file, maxBytes=max_bytes, backupCount=backup_count)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
 
-    def warning(self, message: str) -> None:
-        """Logs a warning message."""
-        self.logger.warning(message)
+    if not logger.hasHandlers():
+        logger.addHandler(handler)
 
-    def error(self, message: str) -> None:
-        """Logs an error message."""
-        self.logger.error(message)
+    return logger
 
-    def critical(self, message: str) -> None:
-        """Logs a critical message."""
-        self.logger.critical(message)
-
-    def set_level(self, level: int) -> None:
-        """Sets the logging level for the Logger."""
-        self.logger.setLevel(level)
+if __name__ == '__main__':
+    logger = setup_logger()
+    logger.debug('Logger setup complete.')
