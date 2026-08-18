@@ -1,28 +1,34 @@
 import time
-import threading
+from threading import Thread
 
 class AutoClicker:
-    def __init__(self, interval=0.1):
+    def __init__(self, interval=1):
         self.interval = interval
-        self.clicking = False
+        self.running = False
 
-    def start_clicking(self):
-        self.clicking = True
-        threading.Thread(target=self._click_loop, daemon=True).start()
+    def start(self):
+        self.running = True
+        self._run()
 
-    def stop_clicking(self):
-        self.clicking = False
-
-    def _click_loop(self):
-        while self.clicking:
-            self.perform_click()
+    def _run(self):
+        while self.running:
+            self.click()
             time.sleep(self.interval)
 
-    def perform_click(self):
-        print('Click!')  # Replace with actual click logic
+    def click(self):
+        print("Click!")  # Placeholder for actual click code
 
-if __name__ == '__main__':
-    clicker = AutoClicker(interval=0.05)
-    clicker.start_clicking()
-    time.sleep(1)
-    clicker.stop_clicking()  # Example usage
+    def stop(self):
+        self.running = False
+
+
+def create_clicker(interval):
+    return AutoClicker(interval)
+
+
+def start_clicker(clicker):
+    Thread(target=clicker.start).start()
+
+
+def stop_clicker(clicker):
+    clicker.stop()
