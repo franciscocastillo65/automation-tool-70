@@ -1,30 +1,31 @@
 import time
-import threading
+import pyautogui
 
 class AutoClicker:
-    def __init__(self, interval):
+    def __init__(self, interval=1, duration=None):
         self.interval = interval
-        self.running = False
+        self.duration = duration
+        self.start_time = None
 
-    def start(self):
-        if not self.running:
-            self.running = True
-            threading.Thread(target=self._click_loop, daemon=True).start()
-
-    def stop(self):
-        self.running = False
-
-    def _click_loop(self):
-        while self.running:
-            self._perform_click()
+    def start_clicking(self):
+        self.start_time = time.time()
+        while self.duration is None or (time.time() - self.start_time < self.duration):
+            pyautogui.click()
             time.sleep(self.interval)
 
-    def _perform_click(self):
-        # Simulation of click action
-        print('Click')
+    def stop_clicking(self):
+        self.duration = 0  # setting duration to zero will stop the loop
+
+    def change_interval(self, new_interval):
+        self.interval = new_interval
+
+    def get_clicks_per_minute(self):
+        if self.duration:
+            return (60 / self.interval) * (self.duration / self.interval)
+        return None
 
 if __name__ == '__main__':
-    clicker = AutoClicker(0.1)
-    clicker.start()
-    time.sleep(1)
-    clicker.stop()  
+    clicker = AutoClicker(interval=0.5, duration=10)
+    clicker.start_clicking()  
+    print('Clicking done!')
+    print('Clicks per minute:', clicker.get_clicks_per_minute())
