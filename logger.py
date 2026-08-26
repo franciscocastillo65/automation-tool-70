@@ -1,31 +1,37 @@
-import os
-from logging.handlers import RotatingFileHandler
-from loguru import logger
-
-LOG_DIR = "logs"
-LOG_FILE = os.path.join(LOG_DIR, "autoclicker.log")
-
-def setup_logger() -> None:
-    if not os.path.exists(LOG_DIR):
-        os.makedirs(LOG_DIR)
-    
-    logger.remove()
-    
-    logger.add(
-        sys.stderr,
-        level="INFO",
-        format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
-    )
-    
-    logger.add(
-        LOG_FILE,
-        rotation="5 MB",
-        retention="10 days",
-        level="DEBUG",
-        compression="zip",
-        format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}"
-    )
-    
-    logger.info("Logger initialized with rotation support")
-
 import sys
+import time
+from datetime import datetime
+
+class ClickerLogger:
+    _instance = None
+    
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super(ClickerLogger, cls).__new__(cls)
+            cls._instance._initialize()
+        return cls._instance
+
+    def _initialize(self):
+        self.start_time = time.time()
+
+    def _format_msg(self, level: str, message: str) -> str:
+        elapsed = f"{time.time() - self.start_time:06.3f}"
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        return f"[{timestamp}][+{elapsed}s][{level.upper()}] {message}"
+
+    def info(self, message: str):
+        formatted = self._format_msg("INFO", message)
+        sys.stdout.write(formatted + "\n")
+        sys.stdout.flush()
+
+    def warn(self, message: str):
+        formatted = self._format_msg("WARN", message)
+        sys.stderr.write(formatted + "\n")
+        sys.stderr.flush()
+
+    def error(self, message: str):
+        formatted = self._format_msg("ERROR", message)
+        sys.stderr.write(formatted + "\n")
+        sys.stderr.flush()
+
+logger = ClickerLogger()
