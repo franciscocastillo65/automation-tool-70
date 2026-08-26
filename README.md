@@ -1,17 +1,20 @@
-```markdown
 # Automation Tool 70
 
-Automation Tool 70 is a versatile autoclicker designed to enhance productivity by automating mouse clicks on command. Built with Python, this tool is lightweight, efficient, and customizable for various user needs.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/downloads/)
+
+`automation-tool-70` is a high-performance, lightweight Python autoclicker designed for repetitive desktop workflows and gaming. It utilizes low-level system hooks to ensure precise click intervals and minimal CPU overhead.
 
 ## Features
-- **High Performance**: Execute thousands of clicks per minute without slowing down your system.
-- **Customizable Settings**: Adjust click interval and duration for precise control to fit your workflow.
-- **Hotkey Functionality**: Start and stop the autoclicker using easy-to-configure hotkeys, enabling seamless operation while multitasking.
-- **Cross-Platform Compatibility**: Works on Windows, macOS, and Linux, ensuring flexibility across different operating systems.
+
+*   **Configurable Click Rates:** Supports adjustable CPS (Clicks Per Second) ranging from 1 to 100+ with randomized delay emulation to bypass basic detection.
+*   **Multi-Button Support:** Map automation triggers to Left, Right, or Middle mouse buttons independently.
+*   **Global Hotkeys:** Start, pause, or terminate click sequences instantly using customizable global keyboard shortcuts (default: `F6` to toggle).
+*   **Pattern Recording:** Record and replay custom mouse movement and clicking sequences for complex, multi-step tasks.
 
 ## Installation
 
-To install Automation Tool 70, ensure you have Python 3.x installed. Then, execute the following commands in your terminal:
+Ensure you have Python 3.8 or higher installed on your system. Clone the repository and install the required dependencies:
 
 ```bash
 git clone https://github.com/Developer/automation-tool-70.git
@@ -19,21 +22,33 @@ cd automation-tool-70
 pip install -r requirements.txt
 ```
 
-## Basic Usage Example
+*Note: Linux users may need to install `python3-tk` and `python3-dev` prior to installing the dependencies for GUI and mouse hook support.*
 
-After installation, you can start the autoclicker with a simple command. Navigate to the project directory and run:
+## Usage
+
+Run the main application script from your terminal:
 
 ```bash
-python autoclicker.py --clicks 100 --interval 0.1
+python main.py
 ```
 
-This command will execute 100 clicks with an interval of 0.1 seconds between each click. You can stop the autoclicker anytime by pressing your designated hotkey.
+### Basic Command Line Usage
+
+You can also run the core engine directly with custom arguments without launching the GUI:
+
+```bash
+python main.py --cps 15 --button left --hotkey F9
+```
+
+1. Launch the application.
+2. Set your desired clicks per second in the configuration panel.
+3. Hover your mouse over the target area.
+4. Press `F6` to initiate the clicker, and press `F6` again to stop.
+
+## Contributing
+
+Contributions are welcome! Please open an issue to discuss proposed changes or bug fixes before submitting a pull request.
 
 ## License
-![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
----
-
-For more information and detailed usage instructions, please refer to the documentation in the repository.
-```
+This project is open-source and available under the [MIT License](LICENSE).
