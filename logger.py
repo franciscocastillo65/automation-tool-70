@@ -1,19 +1,31 @@
-import logging
+import os
 from logging.handlers import RotatingFileHandler
+from loguru import logger
 
-def setup_logger(log_file='app.log', max_bytes=5*1024*1024, backup_count=3):
-    logger = logging.getLogger('AutoClickerLogger')
-    logger.setLevel(logging.DEBUG)
+LOG_DIR = "logs"
+LOG_FILE = os.path.join(LOG_DIR, "autoclicker.log")
 
-    handler = RotatingFileHandler(log_file, maxBytes=max_bytes, backupCount=backup_count)
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    handler.setFormatter(formatter)
+def setup_logger() -> None:
+    if not os.path.exists(LOG_DIR):
+        os.makedirs(LOG_DIR)
+    
+    logger.remove()
+    
+    logger.add(
+        sys.stderr,
+        level="INFO",
+        format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
+    )
+    
+    logger.add(
+        LOG_FILE,
+        rotation="5 MB",
+        retention="10 days",
+        level="DEBUG",
+        compression="zip",
+        format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}"
+    )
+    
+    logger.info("Logger initialized with rotation support")
 
-    if not logger.hasHandlers():
-        logger.addHandler(handler)
-
-    return logger
-
-if __name__ == '__main__':
-    logger = setup_logger()
-    logger.debug('Logger setup complete.')
+import sys
