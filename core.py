@@ -1,74 +1,70 @@
 import time
-from typing import Optional, Dict, Any
-import math
-import pyautogui
+import threading
+from collections import deque
 
-class CoreAutoclicker:
-    """Core class for the autoclicker with creative delay modulation."""
-
-    def __init__(self, base_interval: float = 0.5, max_clicks: int = 100) -> None:
-        """Initialize the autoclicker with base interval and max clicks.
-
-        Args:
-            base_interval: Time between clicks in seconds.
-            max_clicks: Maximum number of clicks to perform.
-        """
-        self.base_interval: float = base_interval
-        self.max_clicks: int = max_clicks
-        self.is_active: bool = False
-        self.click_count: int = 0
-
-    def _modulate_interval(self, current_time: float) -> float:
-        """Calculate unusual varying interval using sine function.
-
-        Args:
-            current_time: Current time from time.time().
-        Returns:
-            Modulated interval in seconds.
-        """
-        return self.base_interval + 0.05 * math.sin(current_time * 2)
-
-    def perform_click(self) -> None:
-        """Perform a single mouse click at current position."""
-        pyautogui.click()
-        self.click_count += 1
-
-    def run(self) -> None:
-        """Start the autoclicking loop until max clicks or stopped.
-
-        Uses a creative approach with time-based modulation.
-        """
-        self.is_active = True
-        self.click_count = 0
-        while self.is_active and self.click_count < self.max_clicks:
-            interval = self._modulate_interval(time.time())
-            time.sleep(interval)
-            self.perform_click()
-
-    def stop(self) -> None:
-        """Stop the autoclicker immediately."""
+class CoreModule:
+    def __init__(self, target_rate=20.0):
+        self.target_rate = target_rate
+        self.interval = 1.0 / target_rate
         self.is_active = False
+        self.worker = None
+        self.total_clicks = 0
+        self.sync = threading.Lock()
+        self.timing_history = deque(maxlen=100)
+        self.last_adjust = time.perf_counter()
 
-    def get_status(self) -> Dict[str, Any]:
-        """Return current status of the autoclicker.
+    def activate(self):
+        with self.sync:
+            if self.is_active:
+                return False
+            self.is_active = True
+            self.worker = threading.Thread(target=self._performance_loop)
+            self.worker.daemon = True
+            self.worker.start()
+            return True
 
-        Returns:
-            Dictionary with active state and click count.
-        """
-        return {
-            "active": self.is_active,
-            "clicks_performed": self.click_count,
-            "base_interval": self.base_interval
-        }
+    def deactivate(self):
+        with self.sync:
+            self.is_active = False
+        if self.worker is not None:
+            self.worker.join(1.0)
+            self.worker = None
 
-def create_autoclicker(interval: Optional[float] = None) -> CoreAutoclicker:
-    """Factory function to create an autoclicker instance.
+    def _performance_loop(self):
+        scheduled = time.perf_counter()
+        while self.is_active:
+            now = time.perf_counter()
+            if now >= scheduled:
+                self._do_click()
+                scheduled += self.interval
+                if scheduled < now:
+                    scheduled = now + self.interval
+                self._update_performance(now)
+            else:
+                wait = scheduled - now
+                if wait > 0.005:
+                    time.sleep(wait - 0.003)
 
-    Args:
-        interval: Optional custom base interval.
-    Returns:
-        New CoreAutoclicker instance.
-    """
-    if interval is None:
-        interval = 0.5
-    return CoreAutoclicker(base_interval=interval)
+    def _do_click(self):
+        with self.sync:
+            self.total_clicks += 1
+        print("Click at " + str(time.perf_counter()))
+
+    def _update_performance(self, now):
+        with self.sync:
+            self.timing_history.append(now)
+            if len(self.timing_history) > 10 and now - self.last_adjust > 1.0:
+                diffs = [self.timing_history[i+1] - self.timing_history[i] for i in range(len(self.timing_history)-1)]
+                avg = sum(diffs) / len(diffs) if diffs else self.interval
+                if abs(avg - self.interval) > 0.001:
+                    self.interval = avg
+                self.last_adjust = now
+
+    def get_clicks(self):
+        with self.sync:
+            return self.total_clicks
+
+    def set_rate(self, new_rate):
+        with self.sync:
+            self.target_rate = new_rate
+            self.interval = 1.0 / new_rate
