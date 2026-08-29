@@ -1,35 +1,48 @@
-from typing import List
+import time
 
-class ClickProcessor:
-    """
-    A class to process click events for automation.
-    """
-    def __init__(self, interval: float, click_count: int) -> None:
-        """
-        Initializes the ClickProcessor with an interval and click count.
-        
-        :param interval: Time interval between clicks in seconds.
-        :param click_count: Number of clicks to perform.
-        """
-        self.interval = interval
-        self.click_count = click_count
+def validate_position(pos):
+    if not isinstance(pos, (list, tuple)) or len(pos) != 2:
+        return False
+    x, y = pos
+    if not isinstance(x, (int, float)) or not isinstance(y, (int, float)):
+        return False
+    return 0 <= x <= 1920 and 0 <= y <= 1080
 
-    def perform_clicks(self) -> None:
-        """
-        Simulates the click actions based on the parameters set during initialization.
-        """
-        import time
-        for _ in range(self.click_count):
-            self.click()
-            time.sleep(self.interval)
+def validate_delay(delay):
+    return isinstance(delay, (int, float)) and delay > 0
 
-    @staticmethod
-    def click() -> None:
-        """
-        Simulates a single click action.
-        """
-        print("Click!")
+def process_action(position, delay):
+    print("Performing click at position", position)
+    time.sleep(delay)
 
-if __name__ == '__main__':
-    click_processor = ClickProcessor(0.5, 10)
-    click_processor.perform_clicks()
+def apply_validations(action):
+    validations = [validate_position, validate_delay]
+    keys = ["position", "delay"]
+    for val_func, key in zip(validations, keys):
+        value = action.get(key)
+        if not val_func(value):
+            return False
+    return True
+
+def main_processing_loop(actions):
+    index = 0
+    while index < len(actions):
+        action = actions[index]
+        if apply_validations(action):
+            position = action["position"]
+            delay = action["delay"]
+            process_action(position, delay)
+        else:
+            print("Skipping invalid action", action)
+        index += 1
+    print("All actions processed")
+
+sample_actions = [
+    {"position": (150, 250), "delay": 0.5},
+    {"position": (450, 550), "delay": 1.5},
+    {"position": (2000, 300), "delay": 0.8},
+    {"position": (700, 900), "delay": 0.2},
+    {"position": (100, 100), "delay": -1},
+]
+
+main_processing_loop(sample_actions)
