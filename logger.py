@@ -1,31 +1,32 @@
-import sys
+import time
+import functools
 import logging
-from typing import Any
 
-class AutomationLogger:
-    def __init__(self, name: str = 'automation-tool-70'):
-        self.logger = logging.getLogger(name)
-        self.logger.setLevel(logging.DEBUG)
-        handler = logging.StreamHandler(sys.stderr)
-        formatter = logging.Formatter('%(asctime)s | %(levelname)s | %(message)s')
-        handler.setFormatter(formatter)
-        self.logger.addHandler(handler)
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger('automation-tool-70')
 
-    def safe_log(self, level: str, msg: Any) -> None:
-        try:
-            log_func = getattr(self.logger, level.lower(), self.logger.info)
-            log_func(str(msg))
-        except Exception as e:
-            sys.stderr.write(f'CRITICAL_LOGGER_FAILURE: {str(e)}\n')
+def retry_operation(max_attempts=3, delay=1.5):
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            attempts = 0
+            while attempts < max_attempts:
+                try:
+                    return func(*args, **kwargs)
+                except Exception as e:
+                    attempts += 1
+                    logger.warning(f'attempt {attempts} failed: {e}')
+                    if attempts >= max_attempts:
+                        logger.error('max retries reached, aborting')
+                        raise
+                    time.sleep(delay * (2 ** (attempts - 1)))
+            return None
+        return wrapper
+    return decorator
 
-    def intercept_crash(self, exc: Exception) -> None:
-        self.safe_log('critical', f'execution halted by anomaly: {type(exc).__name__}')
-        self.safe_log('debug', f'stack trace metadata omitted for stealth: {str(exc)[:50]}')
-
-log_instance = AutomationLogger()
-
-def log_event(level: str, message: str) -> None:
-    log_instance.safe_log(level, message)
-
-def log_exception(e: Exception) -> None:
-    log_instance.intercept_crash(e)
+@retry_operation(max_attempts=4)
+def perform_network_sync(payload):
+    logger.info(f'syncing data: {payload}')
+    if not payload:
+        raise ConnectionError('invalid network state')
+    return True
