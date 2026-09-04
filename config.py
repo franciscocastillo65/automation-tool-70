@@ -2,37 +2,33 @@ import json
 import os
 from typing import Dict, Any
 
-DEFAULT_CONFIG: Dict[str, Any] = {
-    "clicks_per_second": 15.0,
-    "hotkey": "F6",
-    "hold_modifier": False,
-    "randomization_ms": 25,
-    "target_process": "*"
+DEFAULT_CONFIG = {
+    "click_interval": 0.1,
+    "hotkey": "f6",
+    "repeat_mode": "toggle",
+    "max_clicks": 1000
 }
 
-class AutoclickerConfig:
-    def __init__(self, filepath: str = "config.json") -> None:
-        self.filepath = filepath
-        self.data = self.load()
+def load_config(path: str = "settings.json") -> Dict[str, Any]:
+    try:
+        if os.path.exists(path):
+            with open(path, "r") as f:
+                user_data = json.load(f)
+                return {**DEFAULT_CONFIG, **user_data}
+    except (json.JSONDecodeError, IOError):
+        pass
+    return DEFAULT_CONFIG
 
-    def load(self) -> Dict[str, Any]:
-        if not os.path.exists(self.filepath):
-            self.save(DEFAULT_CONFIG)
-            return DEFAULT_CONFIG.copy()
-        try:
-            with open(self.filepath, "r", encoding="utf-8") as f:
-                loaded = json.load(f)
-                return {**DEFAULT_CONFIG, **loaded}
-        except (json.JSONDecodeError, IOError):
-            return DEFAULT_CONFIG.copy()
-
-    def save(self, data: Dict[str, Any]) -> None:
-        with open(self.filepath, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=4)
+class ConfigStore:
+    def __init__(self, path: str = "settings.json"):
+        self._path = path
+        self.data = load_config(path)
 
     def get(self, key: str) -> Any:
         return self.data.get(key, DEFAULT_CONFIG.get(key))
 
-    def set(self, key: str, value: Any) -> None:
-        self.data[key] = value
-        self.save(self.data)
+    def save(self) -> None:
+        with open(self._path, "w") as f:
+            json.dump(self.data, f, indent=4)
+
+settings = ConfigStore()
